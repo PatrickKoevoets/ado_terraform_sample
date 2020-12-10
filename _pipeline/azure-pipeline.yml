@@ -1,0 +1,194 @@
+trigger:
+- master
+- dev
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+stages :
+  - stage: validate
+    jobs:
+    - job: validate
+      continueOnError: false
+      steps:
+      - task: AzureCLI@2
+        displayName: Terraform Install
+        inputs:
+          azureSubscription: 'Terraform_VisualStudioEnterprise'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
+            sudo apt-add-repository "deb [arch=$(dpkg --print-architecture)] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
+            sudo apt install terraform
+      - task: AzureCLI@2
+        displayName: Terraform Init
+        inputs:
+          azureSubscription: 'Terraform_VisualStudioEnterprise'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          addSpnToEnvironment: true
+          inlineScript: |
+            export ARM_CLIENT_ID=$servicePrincipalId
+            export ARM_CLIENT_SECRET=$servicePrincipalKey
+            export ARM_SUBSCRIPTION_ID=$(az account show --query id | xargs)
+            export ARM_TENANT_ID=$(az account show --query tenantId | xargs)
+            rm -rf .terraform 
+            terraform init
+          workingDirectory: './terraform/env/prod'
+      - task: AzureCLI@2
+        displayName: Terraform Validate
+        inputs:
+          azureSubscription: 'Terraform_VisualStudioEnterprise'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          addSpnToEnvironment: true
+          inlineScript: |
+            export ARM_CLIENT_ID=$servicePrincipalId
+            export ARM_CLIENT_SECRET=$servicePrincipalKey
+            export ARM_SUBSCRIPTION_ID=$(az account show --query id | xargs)
+            export ARM_TENANT_ID=$(az account show --query tenantId | xargs)
+            terraform validate
+          workingDirectory: './terraform/env/prod'
+
+  - stage: Estimate
+    jobs:
+    - job: Estimate
+      continueOnError: false
+      steps:
+      - task: AzureCLI@2
+        displayName: Terraform Install
+        inputs:
+          azureSubscription: 'Terraform_VisualStudioEnterprise'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
+            sudo apt-add-repository "deb [arch=$(dpkg --print-architecture)] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
+            sudo apt install terraform
+      - task: AzureCLI@2
+        displayName: Terraform Init
+        inputs:
+          azureSubscription: 'Terraform_VisualStudioEnterprise'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          addSpnToEnvironment: true
+          inlineScript: |
+            export ARM_CLIENT_ID=$servicePrincipalId
+            export ARM_CLIENT_SECRET=$servicePrincipalKey
+            export ARM_SUBSCRIPTION_ID=$(az account show --query id | xargs)
+            export ARM_TENANT_ID=$(az account show --query tenantId | xargs)
+            rm -rf .terraform 
+            terraform init
+          workingDirectory: './terraform/env/prod'
+      - task: AzureCLI@2
+        displayName: Terraform Validate
+        inputs:
+          azureSubscription: 'Terraform_VisualStudioEnterprise'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          addSpnToEnvironment: true
+          inlineScript: |
+            export ARM_CLIENT_ID=$servicePrincipalId
+            export ARM_CLIENT_SECRET=$servicePrincipalKey
+            export ARM_SUBSCRIPTION_ID=$(az account show --query id | xargs)
+            export ARM_TENANT_ID=$(az account show --query tenantId | xargs)
+            terraform validate
+          workingDirectory: './terraform/env/prod'
+
+      - task: AzureCLI@2
+        displayName: Terraform Plan
+        inputs:
+          azureSubscription: 'Terraform_VisualStudioEnterprise'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          addSpnToEnvironment: true
+          inlineScript: |
+            export ARM_CLIENT_ID=$servicePrincipalId
+            export ARM_CLIENT_SECRET=$servicePrincipalKey
+            export ARM_SUBSCRIPTION_ID=$(az account show --query id | xargs)
+            export ARM_TENANT_ID=$(az account show --query tenantId | xargs)
+            terraform plan
+          workingDirectory: './terraform/env/prod'
+
+  - stage: Deploy
+    jobs:
+    - job: Deploy
+      continueOnError: false
+      steps:
+      - task: AzureCLI@2
+        displayName: Terraform Install
+        inputs:
+          azureSubscription: 'Terraform_VisualStudioEnterprise'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
+            sudo apt-add-repository "deb [arch=$(dpkg --print-architecture)] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
+            sudo apt install terraform
+      - task: AzureCLI@2
+        displayName: Terraform Init
+        inputs:
+          azureSubscription: 'Terraform_VisualStudioEnterprise'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          addSpnToEnvironment: true
+          inlineScript: |
+            export ARM_CLIENT_ID=$servicePrincipalId
+            export ARM_CLIENT_SECRET=$servicePrincipalKey
+            export ARM_SUBSCRIPTION_ID=$(az account show --query id | xargs)
+            export ARM_TENANT_ID=$(az account show --query tenantId | xargs)
+            rm -rf .terraform 
+            terraform init
+          workingDirectory: './terraform/env/prod'
+      - task: AzureCLI@2
+        displayName: Terraform Validate
+        inputs:
+          azureSubscription: 'Terraform_VisualStudioEnterprise'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          addSpnToEnvironment: true
+          inlineScript: |
+            export ARM_CLIENT_ID=$servicePrincipalId
+            export ARM_CLIENT_SECRET=$servicePrincipalKey
+            export ARM_SUBSCRIPTION_ID=$(az account show --query id | xargs)
+            export ARM_TENANT_ID=$(az account show --query tenantId | xargs)
+            terraform validate
+          workingDirectory: './terraform/env/prod'
+
+      - task: AzureCLI@2
+        displayName: Terraform plan
+        inputs:
+          azureSubscription: 'Terraform_VisualStudioEnterprise'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          addSpnToEnvironment: true
+          inlineScript: |
+            export ARM_CLIENT_ID=$servicePrincipalId
+            export ARM_CLIENT_SECRET=$servicePrincipalKey
+            export ARM_SUBSCRIPTION_ID=$(az account show --query id | xargs)
+            export ARM_TENANT_ID=$(az account show --query tenantId | xargs)
+            terraform plan
+          workingDirectory: './terraform/env/prod'
+
+      - task: AzureCLI@2
+        displayName: Terraform Apply
+        inputs:
+          azureSubscription: 'Terraform_VisualStudioEnterprise'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          addSpnToEnvironment: true
+          inlineScript: |
+            export ARM_CLIENT_ID=$servicePrincipalId
+            export ARM_CLIENT_SECRET=$servicePrincipalKey
+            export ARM_SUBSCRIPTION_ID=$(az account show --query id | xargs)
+            export ARM_TENANT_ID=$(az account show --query tenantId | xargs)
+            terraform apply
+          workingDirectory: './terraform/env/prod'
+
+
+# File: resource-template.yml
+#resources:
+#  pipelines:
+#  - pipeline: my-pipeline 
+#    source: sourcePipeline

@@ -1,0 +1,66 @@
+stages :
+  - stage: validate
+    jobs:
+    - job: validate
+      continueOnError: false
+      steps:
+      - task: TerraformInstaller@0
+        displayName: 'install'
+        inputs:
+          terraformVersion: '0.13.5'
+      - task: TerraformTaskV1@0
+        displayName: 'init'
+        inputs:
+          provider: 'azurerm'
+          command: 'init'
+          workingDirectory: '$(System.DefaultWorkingDirectory)/terraform/env/prod/'
+          backendServiceArm: 'Terraform_VisualStudioEnterprise'
+          backendAzureRmResourceGroupName: 'rg_state'
+          backendAzureRmStorageAccountName: 'state16296'
+          backendAzureRmContainerName: 'tfstate'
+          backendAzureRmKey: 'terraform.tfstate'
+      - task: TerraformTaskV1@0
+        displayName: 'validate'
+        inputs:
+          provider: 'azurerm'
+          command: 'validate'
+          workingDirectory: '$(System.DefaultWorkingDirectory)/terraform/env/prod/'
+  - stage: deploy
+    jobs:
+    - deployment: deploy_terraform
+      continueOnError: false
+      environment: 'dev'
+      strategy:
+       runOnce:
+         deploy:
+            steps:
+              - checkout: self
+              - task: TerraformInstaller@0
+                displayName: 'install'
+                inputs:
+                  terraformVersion: '0.13.5'
+              - task: TerraformTaskV1@0
+                displayName: 'init'
+                inputs:
+                  provider: 'azurerm'
+                  command: 'init'
+                  workingDirectory: '$(System.DefaultWorkingDirectory)/terraform/env/prod/'
+                  backendServiceArm: 'Terraform_VisualStudioEnterprise'
+                  backendAzureRmResourceGroupName: 'rg_state'
+                  backendAzureRmStorageAccountName: 'state16296'
+                  backendAzureRmContainerName: 'tfstate'
+                  backendAzureRmKey: 'terraform.tfstate'
+              - task: TerraformTaskV1@0
+                displayName: 'plan'
+                inputs:
+                  provider: 'azurerm'
+                  command: 'plan'
+                  workingDirectory: '$(System.DefaultWorkingDirectory)/terraform/env/prod/'
+                  environmentServiceNameAzureRM: 'Terraform_VisualStudioEnterprise'
+              - task: TerraformTaskV1@0
+                displayName: 'apply'
+                inputs:
+                  provider: 'azurerm'
+                  command: 'apply'
+                  workingDirectory: '$(System.DefaultWorkingDirectory)/terraform/env/prod/'
+                  environmentServiceNameAzureRM: 'Terraform_VisualStudioEnterprise'
